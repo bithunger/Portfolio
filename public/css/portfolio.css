@@ -1298,9 +1298,20 @@ main {
 
 label {
     display: grid;
+    align-content: start;
+    align-self: start;
     gap: 7px;
     color: var(--ink);
     font-weight: 750;
+}
+
+label:not(.file-picker-button) {
+    pointer-events: none;
+}
+
+label:not(.file-picker-button) :is(input, textarea, select, a, button),
+.check-row input {
+    pointer-events: auto;
 }
 
 .form-hint {
@@ -2554,6 +2565,7 @@ html.admin-sidebar-collapsed-preload .admin-nav-badge {
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 16px;
 }
 
@@ -2699,6 +2711,8 @@ html.admin-sidebar-collapsed-preload .admin-nav-badge {
 
 .file-field {
     display: grid;
+    align-content: start;
+    align-self: start;
     gap: 7px;
     color: var(--ink);
     font-weight: 750;

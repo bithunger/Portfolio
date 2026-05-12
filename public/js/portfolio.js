@@ -530,6 +530,19 @@ document.addEventListener('DOMContentLoaded', () => {
         updateValue();
     });
 
+    document.querySelectorAll('[data-file-input]').forEach((input) => {
+        const picker = input.closest('.file-picker');
+        const name = picker?.querySelector('[data-file-name]');
+
+        if (!name) {
+            return;
+        }
+
+        input.addEventListener('change', () => {
+            name.textContent = input.files?.[0]?.name || 'No file chosen';
+        });
+    });
+
     document.querySelectorAll('[data-sortable-home-sections]').forEach((list) => {
         const getDragAfterElement = (y) => {
             const items = [...list.querySelectorAll('[data-sortable-item]:not(.is-dragging)')];

@@ -101,6 +101,11 @@
 
     <footer class="site-footer">
         <div class="footer-identity">
+            @if ($profile->frontend_logo_url)
+                <img width="65" src="{{ $profile->frontend_logo_url }}" alt="{{ $profile->owner_name }} logo">
+            @else
+                <span>{{ $profile->initials() }}</span>
+            @endif
             <strong>{{ $profile->owner_name }}</strong>
             <a class="footer-email" href="mailto:{{ $profile->email }}">{{ $profile->email }}</a>
             <p class="footer-copy">&copy; {{ now()->year }} {{ $profile->owner_name }}. All rights reserved.</p>
