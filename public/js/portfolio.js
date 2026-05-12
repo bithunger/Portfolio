@@ -504,6 +504,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.querySelectorAll('[data-color-picker]').forEach((input) => {
+        const value = input.closest('.color-control')?.querySelector('[data-color-value]');
+
+        if (!value) {
+            return;
+        }
+
+        const updateValue = () => {
+            const hex = input.value.replace('#', '');
+
+            if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+                value.textContent = '';
+                return;
+            }
+
+            const red = Number.parseInt(hex.slice(0, 2), 16);
+            const green = Number.parseInt(hex.slice(2, 4), 16);
+            const blue = Number.parseInt(hex.slice(4, 6), 16);
+
+            value.textContent = `rgb(${red}, ${green}, ${blue})`;
+        };
+
+        input.addEventListener('input', updateValue);
+        updateValue();
+    });
+
+    document.querySelectorAll('[data-sortable-home-sections]').forEach((list) => {
+        const getDragAfterElement = (y) => {
+            const items = [...list.querySelectorAll('[data-sortable-item]:not(.is-dragging)')];
+
+            return items.reduce((closest, item) => {
+                const box = item.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, item };
+                }
+
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY, item: null }).item;
+        };
+
+        list.querySelectorAll('[data-sortable-item]').forEach((item) => {
+            item.addEventListener('dragstart', (event) => {
+                item.classList.add('is-dragging');
+
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', item.querySelector('input')?.value || '');
+                }
+            });
+
+            item.addEventListener('dragend', () => {
+                item.classList.remove('is-dragging');
+                list.querySelectorAll('.is-drag-over').forEach((element) => element.classList.remove('is-drag-over'));
+            });
+        });
+
+        list.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            const dragging = list.querySelector('.is-dragging');
+
+            if (!dragging) {
+                return;
+            }
+
+            const afterElement = getDragAfterElement(event.clientY);
+
+            list.querySelectorAll('.is-drag-over').forEach((element) => element.classList.remove('is-drag-over'));
+
+            if (afterElement) {
+                afterElement.classList.add('is-drag-over');
+                list.insertBefore(dragging, afterElement);
+            } else {
+                list.appendChild(dragging);
+            }
+        });
+
+        list.addEventListener('drop', () => {
+            list.querySelectorAll('.is-drag-over').forEach((element) => element.classList.remove('is-drag-over'));
+        });
+    });
+
     document.querySelectorAll('[data-portrait-editor]').forEach((editor) => {
         const input = editor.querySelector('[data-portrait-input]');
         const preview = editor.querySelector('[data-portrait-preview]');

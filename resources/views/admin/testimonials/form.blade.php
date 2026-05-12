@@ -14,13 +14,17 @@
                     <img src="" alt="" data-cover-preview hidden>
                 @endif
             </div>
-            <label>
-                Avatar image
-                <input type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp" data-cover-input>
+            <div class="file-field">
+                <span class="field-label">Avatar image</span>
+                <div class="file-picker">
+                    <input id="avatar_file" class="file-picker-input" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp" data-cover-input data-file-input>
+                    <label class="file-picker-button" for="avatar_file">Choose file</label>
+                    <span class="file-picker-name" data-file-name>No file chosen</span>
+                </div>
                 @if ($testimonial->avatar_url)
                     <small class="form-hint">Upload a new image to replace the current avatar.</small>
                 @endif
-            </label>
+            </div>
         </div>
         <label>Display order <input type="number" min="0" name="display_order" value="{{ old('display_order', $testimonial->display_order ?? 0) }}"></label>
         <div class="check-group">

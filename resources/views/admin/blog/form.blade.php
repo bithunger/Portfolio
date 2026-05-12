@@ -30,13 +30,17 @@
                     <img src="" alt="" data-cover-preview hidden>
                 @endif
             </div>
-            <label>
-                Cover image
-                <input type="file" name="cover_image_file" accept="image/png,image/jpeg,image/webp" data-cover-input>
+            <div class="file-field">
+                <span class="field-label">Cover image</span>
+                <div class="file-picker">
+                    <input id="cover_image_file" class="file-picker-input" type="file" name="cover_image_file" accept="image/png,image/jpeg,image/webp" data-cover-input data-file-input>
+                    <label class="file-picker-button" for="cover_image_file">Choose file</label>
+                    <span class="file-picker-name" data-file-name>No file chosen</span>
+                </div>
                 @if ($post->cover_image_url)
                     <small class="form-hint">Upload a new image to replace the current cover.</small>
                 @endif
-            </label>
+            </div>
         </div>
         <label>
             Published time

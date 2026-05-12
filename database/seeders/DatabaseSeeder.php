@@ -59,6 +59,7 @@ class DatabaseSeeder extends Seeder
                 'frontend_logo_url' => null,
                 'backend_logo_url' => null,
                 'favicon_url' => null,
+                'home_section_order' => array_keys(Profile::homeSectionOptions()),
             ],
         );
 

@@ -18,13 +18,17 @@
                     <img src="" alt="" data-cover-preview hidden>
                 @endif
             </div>
-            <label>
-                Project image
-                <input type="file" name="project_image_file" accept="image/png,image/jpeg,image/webp" data-cover-input>
+            <div class="file-field">
+                <span class="field-label">Project image</span>
+                <div class="file-picker">
+                    <input id="project_image_file" class="file-picker-input" type="file" name="project_image_file" accept="image/png,image/jpeg,image/webp" data-cover-input data-file-input>
+                    <label class="file-picker-button" for="project_image_file">Choose file</label>
+                    <span class="file-picker-name" data-file-name>No file chosen</span>
+                </div>
                 @if ($project->image_url)
                     <small class="form-hint">Upload a new image to replace the current project image.</small>
                 @endif
-            </label>
+            </div>
         </div>
         <label>Client <input name="client" value="{{ old('client', $project->client) }}"></label>
         <label>Role <input name="role" value="{{ old('role', $project->role) }}"></label>

@@ -54,7 +54,14 @@ class ProfileController extends Controller
             'frontend_background_color' => ['nullable', 'string', 'max:20'],
             'backend_background_color' => ['nullable', 'string', 'max:20'],
             'font_family' => ['nullable', Rule::in(array_keys(Profile::fontOptions()))],
+            'home_section_order' => ['nullable', 'array'],
+            'home_section_order.*' => ['nullable', Rule::in(array_keys(Profile::homeSectionOptions()))],
+            'home_section_positions' => ['nullable', 'array'],
+            'home_section_positions.*' => ['nullable', 'integer', 'min:1', 'max:'.count(Profile::homeSectionOptions())],
         ]);
+
+        $homeSectionOrder = $data['home_section_order'] ?? [];
+        $homeSectionPositions = $data['home_section_positions'] ?? [];
 
         unset(
             $data['portrait_image'],
@@ -63,6 +70,8 @@ class ProfileController extends Controller
             $data['frontend_logo_file'],
             $data['backend_logo_file'],
             $data['favicon_file'],
+            $data['home_section_order'],
+            $data['home_section_positions'],
         );
 
         if ($portraitPath = $this->storePortrait($request, $profile)) {
@@ -88,10 +97,44 @@ class ProfileController extends Controller
         $data['frontend_background_color'] = ($data['frontend_background_color'] ?? null) ?: '#f7f8f6';
         $data['backend_background_color'] = ($data['backend_background_color'] ?? null) ?: '#f7f8f6';
         $data['font_family'] = ($data['font_family'] ?? null) ?: 'elegant';
+        $data['home_section_order'] = $homeSectionOrder
+            ? $this->normalizeHomeSectionOrder($homeSectionOrder)
+            : $this->homeSectionOrderFromPositions($homeSectionPositions);
 
         $profile->update($data);
 
         return redirect()->route('admin.profile.edit')->with('status', 'Profile updated.');
+    }
+
+    private function homeSectionOrderFromPositions(array $positions): array
+    {
+        $sections = array_keys(Profile::homeSectionOptions());
+
+        return collect($sections)
+            ->sort(function (string $a, string $b) use ($positions, $sections): int {
+                $aDefault = array_search($a, $sections, true) + 1;
+                $bDefault = array_search($b, $sections, true) + 1;
+                $aPosition = (int) ($positions[$a] ?? $aDefault);
+                $bPosition = (int) ($positions[$b] ?? $bDefault);
+
+                return [$aPosition, $aDefault] <=> [$bPosition, $bDefault];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function normalizeHomeSectionOrder(array $order): array
+    {
+        $sections = array_keys(Profile::homeSectionOptions());
+        $orderedSections = collect($order)
+            ->filter(fn ($section) => in_array($section, $sections, true))
+            ->unique()
+            ->values();
+
+        return $orderedSections
+            ->merge(collect($sections)->diff($orderedSections))
+            ->values()
+            ->all();
     }
 
     private function storePortrait(Request $request, Profile $profile): ?string

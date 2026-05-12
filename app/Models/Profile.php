@@ -34,9 +34,45 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'frontend_logo_url',
     'backend_logo_url',
     'favicon_url',
+    'home_section_order',
 ])]
 class Profile extends Model
 {
+    public const HOME_SECTIONS = [
+        'intro' => 'Intro',
+        'services' => 'Services',
+        'experience' => 'Experience',
+        'education' => 'Education',
+        'skills' => 'Skills',
+        'projects' => 'Projects',
+        'publications' => 'Publications',
+        'testimonials' => 'Testimonials',
+    ];
+
+    protected $casts = [
+        'home_section_order' => 'array',
+    ];
+
+    public static function homeSectionOptions(): array
+    {
+        return self::HOME_SECTIONS;
+    }
+
+    public function orderedHomeSections(): array
+    {
+        $savedSections = is_array($this->home_section_order) ? $this->home_section_order : [];
+        $validSections = array_keys(self::HOME_SECTIONS);
+        $orderedSections = collect($savedSections)
+            ->filter(fn ($section) => in_array($section, $validSections, true))
+            ->unique()
+            ->values();
+
+        return $orderedSections
+            ->merge(collect($validSections)->diff($orderedSections))
+            ->values()
+            ->all();
+    }
+
     public static function fontOptions(): array
     {
         return [
@@ -93,6 +129,7 @@ class Profile extends Model
                 'frontend_background_color' => '#f7f8f6',
                 'backend_background_color' => '#f7f8f6',
                 'font_family' => 'elegant',
+                'home_section_order' => array_keys(self::HOME_SECTIONS),
             ],
         );
     }
