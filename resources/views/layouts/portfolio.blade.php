@@ -49,7 +49,7 @@
     <link rel="preconnect" href="https://images.unsplash.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;850&family=Lora:wght@500;650;700&family=Manrope:wght@400;500;650;750;850&family=Playfair+Display:wght@650;750&family=Poppins:wght@400;500;650;750;850&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ $profile->favicon_url ?: asset('favicon.ico') }}">
-    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}?v={{ filemtime(public_path('css/portfolio.css')) }}">
     @stack('styles')
     <style>
         :root {
@@ -139,6 +139,6 @@
     </footer>
 
     @stack('scripts')
-    <script src="{{ asset('js/portfolio.js') }}" defer></script>
+    <script src="{{ asset('js/portfolio.js') }}?v={{ filemtime(public_path('js/portfolio.js')) }}" defer></script>
 </body>
 </html>
