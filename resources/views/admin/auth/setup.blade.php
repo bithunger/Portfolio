@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Owner Setup / {{ $siteProfile->owner_name }} Portfolio</title>
     <link rel="icon" href="{{ $siteProfile->favicon_url ?: asset('favicon.ico') }}">
-    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}?v={{ filemtime($_SERVER['DOCUMENT_ROOT'] . '/css/portfolio.css') }}">
     <style>
         :root {
             --accent: {{ $siteProfile->accent_color ?: '#0f766e' }};
