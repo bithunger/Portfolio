@@ -15,7 +15,7 @@ class AuthController extends Controller
 {
     public function showLogin(): View|RedirectResponse
     {
-        if (User::doesntExist()) {
+        if (User::owner()->doesntExist()) {
             return redirect()->route('admin.setup');
         }
 
@@ -24,7 +24,7 @@ class AuthController extends Controller
 
     public function showSetup(): View|RedirectResponse
     {
-        if (User::exists()) {
+        if (User::owner()->exists()) {
             return redirect()->route('admin.login');
         }
 
@@ -33,29 +33,33 @@ class AuthController extends Controller
 
     public function setup(Request $request): RedirectResponse
     {
-        if (User::exists()) {
+        if (User::owner()->exists()) {
             return redirect()->route('admin.login');
         }
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:160', 'unique:users,email'],
+            'email' => ['required', 'email:rfc', 'max:160', 'unique:users,email'],
+            'contact' => ['required', 'string', 'max:80'],
             'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'email.email' => 'Please enter a valid email address.',
         ]);
 
         $user = User::create($data + [
             'email_verified_at' => now(),
+            'is_owner' => true,
         ]);
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('admin.dashboard')->with('status', 'First admin account created.');
+        return redirect()->route('admin.dashboard')->with('status', 'Owner account created.');
     }
 
     public function login(Request $request): RedirectResponse
     {
-        if (User::doesntExist()) {
+        if (User::owner()->doesntExist()) {
             return redirect()->route('admin.setup');
         }
 

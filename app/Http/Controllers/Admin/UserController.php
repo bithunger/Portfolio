@@ -15,7 +15,7 @@ class UserController extends Controller
     public function index(): View
     {
         return view('admin.users.index', [
-            'users' => User::orderBy('name')->get(),
+            'users' => User::orderByDesc('is_owner')->orderBy('name')->get(),
         ]);
     }
 
@@ -53,6 +53,10 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
+        if ($user->isOwner()) {
+            return redirect()->route('admin.users.index')->withErrors('The owner account cannot be deleted.');
+        }
+
         if ($request->user()->is($user)) {
             return redirect()->route('admin.users.index')->withErrors('You cannot delete your own account.');
         }
@@ -74,16 +78,24 @@ class UserController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
+            'contact' => ['nullable', 'string', 'max:80'],
             'email' => [
                 'required',
-                'email',
+                'email:rfc',
                 'max:160',
                 Rule::unique('users', 'email')->ignore($user),
             ],
             'password' => $passwordRules,
+        ], [
+            'email.email' => 'Please enter a valid email address.',
         ]);
 
-        $data['email_verified_at'] = $request->boolean('email_verified') ? now() : null;
+        if ($user?->isOwner()) {
+            $data['email_verified_at'] = $user->email_verified_at ?: now();
+            $data['is_owner'] = true;
+        } else {
+            $data['email_verified_at'] = $request->boolean('email_verified') ? now() : null;
+        }
 
         return $data;
     }

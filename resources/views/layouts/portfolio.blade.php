@@ -2,6 +2,14 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @php
     $fontConfig = $profile->fontConfig();
+    $homeNavItems = [
+        'services' => ['Services', 'services'],
+        'experience' => ['Experience', 'experience'],
+        'education' => ['Education', 'education'],
+        'skills' => ['Skills', 'skills'],
+        'projects' => ['Projects', 'projects'],
+        'publications' => ['Publications', 'publications'],
+    ];
     $normalizeHex = function (?string $value, string $fallback): string {
         $value = trim((string) $value);
         if (preg_match('/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $value, $matches)) {
@@ -73,19 +81,18 @@
             @endif
             <strong>{{ $profile->owner_name }}</strong>
         </a>
-        <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open menu">
+        <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open menu" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
         <nav class="site-nav" data-nav-menu>
-            <a href="{{ route('portfolio.home') }}#services" data-section-link="services">Services</a>
-            <a href="{{ route('portfolio.home') }}#experience" data-section-link="experience">Experience</a>
-            <a href="{{ route('portfolio.home') }}#education" data-section-link="education">Education</a>
-            <a href="{{ route('portfolio.home') }}#skills" data-section-link="skills">Skills</a>
-            <a href="{{ route('portfolio.home') }}#work" data-section-link="work" @class(['active' => request()->routeIs('portfolio.projects.*')])>Projects</a>
-            <a href="{{ route('portfolio.home') }}#publications" data-section-link="publications">Publications</a>
+            @foreach ($profile->orderedHomeSections() as $sectionKey)
+                @continue(! isset($homeNavItems[$sectionKey]))
+                @php($navItem = $homeNavItems[$sectionKey])
+                <a href="{{ route('portfolio.home') }}#{{ $navItem[1] }}" data-section-link="{{ $navItem[1] }}" @class(['active' => $sectionKey === 'projects' && request()->routeIs('portfolio.projects.*')])>{{ $navItem[0] }}</a>
+            @endforeach
             <a href="{{ route('portfolio.blog.index') }}" @class(['active' => request()->routeIs('portfolio.blog.*')])>Blog</a>
             <a href="{{ route('contact.index') }}" @class(['active' => request()->routeIs('contact.index')])>Contact</a>
-            <a class="nav-pill" href="{{ route('admin.dashboard') }}">Control</a>
+            <a class="nav-pill" href="{{ route('admin.dashboard') }}" target="_blank" rel="noopener noreferrer">Control</a>
         </nav>
     </header>
 

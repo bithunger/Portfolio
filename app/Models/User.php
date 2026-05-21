@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'contact', 'password', 'email_verified_at', 'is_owner'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -26,7 +26,18 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_owner' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    public function scopeOwner($query)
+    {
+        return $query->where('is_owner', true);
+    }
+
+    public function isOwner(): bool
+    {
+        return (bool) $this->is_owner;
     }
 }

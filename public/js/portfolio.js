@@ -3,15 +3,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.querySelector('[data-nav-toggle]');
 
     if (nav && toggle) {
+        const setNavOpen = (isOpen) => {
+            nav.classList.toggle('is-open', isOpen);
+            toggle.setAttribute('aria-expanded', String(isOpen));
+            toggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        };
+
         toggle.addEventListener('click', () => {
-            nav.classList.toggle('is-open');
+            setNavOpen(!nav.classList.contains('is-open'));
         });
 
-        nav.querySelectorAll('a[href*="#"]').forEach((link) => {
+        nav.querySelectorAll('.site-nav a').forEach((link) => {
             link.addEventListener('click', () => {
-                nav.classList.remove('is-open');
+                setNavOpen(false);
             });
         });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setNavOpen(false);
+            }
+        });
+    }
+
+    if (window.location.hash === '#work') {
+        const projectsSection = document.getElementById('projects');
+
+        if (projectsSection) {
+            window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#projects`);
+            window.requestAnimationFrame(() => projectsSection.scrollIntoView());
+        }
     }
 
     const adminBody = document.querySelector('[data-admin-body]');
@@ -389,65 +410,168 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const setCount = Math.max(2, Number.parseInt(track.dataset.testimonialSets || '2', 10) || 2);
+        const middleSet = Math.floor(setCount / 2);
         let offset = 0;
-        let halfWidth = 0;
+        let setWidth = 0;
         let previousTime = performance.now();
         let paused = false;
         let manualPauseUntil = 0;
+        let dragging = false;
+        let dragStartX = 0;
+        let dragStartOffset = 0;
+        let lastDragX = 0;
+        let lastDragTime = 0;
+        let dragVelocity = 0;
+
+        const render = () => {
+            track.style.transform = `translate3d(${offset}px, 0, 0)`;
+        };
 
         const measure = () => {
             const trackStyle = window.getComputedStyle(track);
             const gap = Number.parseFloat(trackStyle.columnGap || trackStyle.gap || '0') || 0;
-            halfWidth = (track.scrollWidth + gap) / 2;
-            offset = -halfWidth;
-            track.style.transform = `translate3d(${offset}px, 0, 0)`;
+            setWidth = (track.scrollWidth + gap) / setCount;
+            offset = -setWidth * middleSet;
+            render();
+        };
+
+        const normalizeOffset = () => {
+            if (!setWidth) {
+                return false;
+            }
+
+            let normalized = false;
+            const upperBound = -setWidth;
+            const lowerBound = -setWidth * (setCount - 2);
+
+            while (offset >= upperBound) {
+                offset -= setWidth;
+                normalized = true;
+            }
+
+            while (offset <= lowerBound) {
+                offset += setWidth;
+                normalized = true;
+            }
+
+            return normalized;
         };
 
         const step = (time) => {
             const delta = time - previousTime;
             previousTime = time;
 
-            if (!reduceMotion && !paused && time > manualPauseUntil && halfWidth > 0) {
+            if (!reduceMotion && !paused && time > manualPauseUntil && setWidth > 0) {
                 offset += delta * 0.035;
-
-                if (offset >= 0) {
-                    offset = -halfWidth;
-                }
-
-                track.style.transform = `translate3d(${offset}px, 0, 0)`;
+                normalizeOffset();
+                render();
             }
 
             window.requestAnimationFrame(step);
         };
 
         const move = (direction) => {
-            if (!halfWidth) {
+            if (!setWidth) {
                 return;
             }
 
             manualPauseUntil = performance.now() + 1200;
             offset += direction * 280;
 
-            if (offset >= 0) {
-                offset = -halfWidth + (offset % halfWidth);
-            }
-
-            if (offset <= -halfWidth) {
-                offset = offset + halfWidth;
-            }
-
             track.style.transition = 'transform .35s ease';
-            track.style.transform = `translate3d(${offset}px, 0, 0)`;
+            render();
             setTimeout(() => {
                 track.style.transition = '';
+                if (normalizeOffset()) {
+                    render();
+                }
+                previousTime = performance.now();
             }, 360);
         };
 
+        const endDrag = (event) => {
+            if (!dragging) {
+                return;
+            }
+
+            dragging = false;
+            paused = false;
+            manualPauseUntil = performance.now() + 1400;
+            carousel.classList.remove('is-dragging');
+
+            if (event.pointerId !== undefined && carousel.hasPointerCapture?.(event.pointerId)) {
+                carousel.releasePointerCapture(event.pointerId);
+            }
+
+            const momentum = Math.max(-220, Math.min(220, dragVelocity * 180));
+            offset += momentum;
+            normalizeOffset();
+            track.style.transition = 'transform .28s ease-out';
+            render();
+
+            setTimeout(() => {
+                track.style.transition = '';
+                previousTime = performance.now();
+            }, 290);
+        };
+
+        carousel.addEventListener('pointerdown', (event) => {
+            if (event.button !== undefined && event.button !== 0) {
+                return;
+            }
+
+            dragging = true;
+            paused = true;
+            dragStartX = event.clientX;
+            dragStartOffset = offset;
+            lastDragX = event.clientX;
+            lastDragTime = performance.now();
+            dragVelocity = 0;
+            track.style.transition = '';
+            carousel.classList.add('is-dragging');
+            carousel.setPointerCapture?.(event.pointerId);
+
+            if (event.pointerType === 'mouse') {
+                event.preventDefault();
+            }
+        });
+
+        carousel.addEventListener('pointermove', (event) => {
+            if (!dragging) {
+                return;
+            }
+
+            const now = performance.now();
+            const deltaX = event.clientX - lastDragX;
+            const deltaTime = Math.max(now - lastDragTime, 1);
+
+            dragVelocity = deltaX / deltaTime;
+            lastDragX = event.clientX;
+            lastDragTime = now;
+            offset = dragStartOffset + event.clientX - dragStartX;
+            normalizeOffset();
+            render();
+            event.preventDefault();
+        });
+
+        carousel.addEventListener('pointerup', endDrag);
+        carousel.addEventListener('pointercancel', endDrag);
+        carousel.addEventListener('lostpointercapture', endDrag);
+
         carousel.addEventListener('mouseenter', () => {
+            if (dragging) {
+                return;
+            }
+
             paused = true;
         });
 
         carousel.addEventListener('mouseleave', () => {
+            if (dragging) {
+                return;
+            }
+
             paused = false;
             previousTime = performance.now();
         });

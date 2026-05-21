@@ -32,14 +32,13 @@
             @if ($errors->any())
                 <div class="notice error">{{ $errors->first() }}</div>
             @endif
-            <label>Email <input type="email" name="email" value="{{ old('email', 'admin@example.com') }}" required autofocus></label>
+            <label>Email <input type="email" name="email" value="{{ old('email') }}" placeholder="admin@example.com" required autofocus></label>
             <label>Password <input type="password" name="password" required></label>
             <div class="login-options">
                 <label class="check-row"><input type="checkbox" name="remember" value="1"> Remember me</label>
                 <a class="text-link" href="{{ route('admin.password.request') }}">Forgot password?</a>
             </div>
             <button class="btn primary" type="submit">Sign in</button>
-            <a class="back-link" href="{{ route('portfolio.home') }}">Back to portfolio</a>
         </form>
     </main>
 </body>

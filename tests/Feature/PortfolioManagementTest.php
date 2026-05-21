@@ -82,30 +82,36 @@ class PortfolioManagementTest extends TestCase
         $this->get('/admin')->assertRedirect('/login');
     }
 
-    public function test_first_admin_can_be_created_when_no_users_exist(): void
+    public function test_owner_account_can_be_created_when_no_owner_exists(): void
     {
         $this->get(route('admin.login'))
             ->assertRedirect(route('admin.setup'));
 
         $this->post(route('admin.setup.store'), [
-            'name' => 'First Admin',
-            'email' => 'first@example.com',
+            'name' => 'First Owner',
+            'email' => 'owner@example.com',
+            'contact' => '+1 555 0100',
             'password' => 'first-password',
             'password_confirmation' => 'first-password',
         ])->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas(User::class, [
-            'email' => 'first@example.com',
+            'email' => 'owner@example.com',
+            'contact' => '+1 555 0100',
+            'is_owner' => true,
         ]);
     }
 
-    public function test_setup_is_not_available_after_users_exist(): void
+    public function test_setup_is_not_available_after_owner_exists(): void
     {
         User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'name' => 'Owner',
+            'email' => 'owner@example.com',
+            'contact' => '+1 555 0100',
             'password' => 'password',
+            'email_verified_at' => now(),
+            'is_owner' => true,
         ]);
 
         $this->get(route('admin.setup'))
@@ -115,13 +121,16 @@ class PortfolioManagementTest extends TestCase
     public function test_admin_can_login_and_view_dashboard(): void
     {
         User::create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'name' => 'Owner',
+            'email' => 'owner@example.com',
+            'contact' => '+1 555 0100',
             'password' => 'password',
+            'email_verified_at' => now(),
+            'is_owner' => true,
         ]);
 
         $this->post('/admin/login', [
-            'email' => 'admin@example.com',
+            'email' => 'owner@example.com',
             'password' => 'password',
         ])->assertRedirect(route('admin.dashboard'));
 
@@ -232,6 +241,33 @@ class PortfolioManagementTest extends TestCase
 
         $this->assertDatabaseHas(User::class, [
             'email' => 'admin@example.com',
+        ]);
+    }
+
+    public function test_owner_account_cannot_be_deleted_by_another_admin(): void
+    {
+        $owner = User::create([
+            'name' => 'Owner',
+            'email' => 'owner@example.com',
+            'contact' => '+1 555 0100',
+            'password' => 'password',
+            'email_verified_at' => now(),
+            'is_owner' => true,
+        ]);
+
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.users.destroy', $owner))
+            ->assertSessionHasErrors();
+
+        $this->assertDatabaseHas(User::class, [
+            'email' => 'owner@example.com',
+            'is_owner' => true,
         ]);
     }
 

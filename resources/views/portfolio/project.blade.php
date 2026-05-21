@@ -6,7 +6,7 @@
 @section('content')
     <article @class(['article-shell', 'project-shell', 'has-cover' => $project->image_url])>
         <section class="article-hero project-article-hero">
-            <a class="back-link" href="{{ route('portfolio.home') }}#work">Back to work</a>
+            <a class="back-link" href="{{ route('portfolio.home') }}#projects">Back to all projects</a>
             <div class="article-hero-copy">
                 <p class="eyebrow">{{ $project->client ?: 'Case Study' }}</p>
                 <h1>{{ $project->title }}</h1>

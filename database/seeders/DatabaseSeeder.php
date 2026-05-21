@@ -6,27 +6,33 @@ use App\Models\ContactMessage;
 use App\Models\EducationEntry;
 use App\Models\Experience;
 use App\Models\BlogPost;
+use App\Models\NewsletterSubscription;
 use App\Models\Profile;
 use App\Models\Project;
 use App\Models\Publication;
 use App\Models\Service;
 use App\Models\Skill;
 use App\Models\Testimonial;
-use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Portfolio Admin',
-                'password' => Hash::make('password'),
-            ],
-        );
+        foreach ([
+            ContactMessage::class,
+            NewsletterSubscription::class,
+            BlogPost::class,
+            EducationEntry::class,
+            Experience::class,
+            Project::class,
+            Publication::class,
+            Service::class,
+            Skill::class,
+            Testimonial::class,
+        ] as $model) {
+            $model::query()->delete();
+        }
 
         Profile::updateOrCreate(
             ['id' => 1],
@@ -112,6 +118,22 @@ class DatabaseSeeder extends Seeder
                 'published' => true,
                 'display_order' => 3,
             ],
+            [
+                'title' => 'Harbor Care Portal',
+                'slug' => 'harbor-care-portal',
+                'summary' => 'A patient intake and appointment workflow for a small healthcare team moving away from paper forms.',
+                'description' => "Built a secure operations portal for a clinic team that needed cleaner intake, searchable patient notes, and simple appointment handoff.\n\nThe work focused on practical form design, role-ready admin screens, and responsive layouts that staff could use from reception desks and tablets.",
+                'image_url' => 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80',
+                'client' => 'Harbor Care',
+                'role' => 'Laravel developer',
+                'year' => 2024,
+                'tech_stack' => ['Laravel', 'Forms', 'Admin UX', 'SQLite'],
+                'live_url' => 'https://example.com',
+                'repo_url' => null,
+                'featured' => false,
+                'published' => true,
+                'display_order' => 4,
+            ],
         ];
 
         foreach ($projects as $project) {
@@ -122,6 +144,7 @@ class DatabaseSeeder extends Seeder
             ['title' => 'Portfolio Systems', 'icon' => 'PS', 'description' => 'Personal sites with strong first impressions, editable content, SEO basics, and conversion-focused contact flows.', 'deliverables' => ['Public portfolio', 'Admin dashboard', 'Contact inbox'], 'display_order' => 1],
             ['title' => 'Laravel Dashboards', 'icon' => 'LD', 'description' => 'Operational backends for teams that need clean CRUD, role-ready structure, and reliable data workflows.', 'deliverables' => ['Custom models', 'Admin UI', 'Validation and seed data'], 'display_order' => 2],
             ['title' => 'UI Refreshes', 'icon' => 'UI', 'description' => 'Interface redesigns that improve hierarchy, responsiveness, readability, and everyday usability.', 'deliverables' => ['Responsive layouts', 'Design cleanup', 'Frontend implementation'], 'display_order' => 3],
+            ['title' => 'Content Operations', 'icon' => 'CO', 'description' => 'Editorial workflows for teams that need repeatable publishing, organized assets, and clearer review paths.', 'deliverables' => ['Content models', 'Publishing states', 'Editor handoff'], 'display_order' => 4],
         ];
 
         foreach ($services as $service) {
@@ -134,7 +157,10 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Database Design', 'category' => 'Backend', 'proficiency' => 88, 'display_order' => 3],
             ['name' => 'Blade', 'category' => 'Frontend', 'proficiency' => 90, 'display_order' => 1],
             ['name' => 'Responsive CSS', 'category' => 'Frontend', 'proficiency' => 93, 'display_order' => 2],
+            ['name' => 'JavaScript', 'category' => 'Frontend', 'proficiency' => 86, 'display_order' => 3],
             ['name' => 'UX Writing', 'category' => 'Product', 'proficiency' => 84, 'display_order' => 1],
+            ['name' => 'Content Modeling', 'category' => 'Product', 'proficiency' => 88, 'display_order' => 2],
+            ['name' => 'Accessibility QA', 'category' => 'Product', 'proficiency' => 82, 'display_order' => 3],
         ];
 
         foreach ($skills as $skill) {
@@ -167,6 +193,28 @@ class DatabaseSeeder extends Seeder
                 'highlights' => ['Reduced manual reporting work', 'Refactored legacy PHP modules', 'Partnered closely with design'],
                 'display_order' => 2,
             ],
+            [
+                'role' => 'Frontend Developer',
+                'company' => 'Signal & Type',
+                'location' => 'Austin, TX',
+                'start_date' => '2018-06-01',
+                'end_date' => '2020-03-01',
+                'is_current' => false,
+                'summary' => 'Built responsive marketing sites, content pages, and reusable UI patterns for agency clients.',
+                'highlights' => ['Shipped accessible landing pages', 'Created reusable Blade components', 'Improved mobile page speed'],
+                'display_order' => 3,
+            ],
+            [
+                'role' => 'Junior Web Developer',
+                'company' => 'LaunchGrid',
+                'location' => 'Remote',
+                'start_date' => '2016-09-01',
+                'end_date' => '2018-05-01',
+                'is_current' => false,
+                'summary' => 'Supported PHP site builds, bug fixes, content migrations, and QA for small business clients.',
+                'highlights' => ['Maintained PHP websites', 'Migrated legacy content', 'Documented admin workflows'],
+                'display_order' => 4,
+            ],
         ];
 
         foreach ($experiences as $experience) {
@@ -197,6 +245,26 @@ class DatabaseSeeder extends Seeder
                 'highlights' => ['Responsive interface systems', 'Accessibility-first forms', 'Component documentation'],
                 'display_order' => 2,
             ],
+            [
+                'degree' => 'Advanced Laravel Architecture Certificate',
+                'institution' => 'Backend Craft Academy',
+                'location' => 'Online',
+                'start_year' => 2023,
+                'end_year' => 2024,
+                'summary' => 'Covered service boundaries, validation strategies, queues, notifications, and maintainable admin workflows.',
+                'highlights' => ['Queue and mail workflows', 'Testing practical apps', 'Refactoring service layers'],
+                'display_order' => 3,
+            ],
+            [
+                'degree' => 'Accessibility for Web Interfaces',
+                'institution' => 'Inclusive Design Institute',
+                'location' => 'Online',
+                'start_year' => 2024,
+                'end_year' => 2024,
+                'summary' => 'Focused on semantic HTML, keyboard flows, contrast, form feedback, and content readability.',
+                'highlights' => ['Keyboard-first testing', 'Accessible form states', 'WCAG fundamentals'],
+                'display_order' => 4,
+            ],
         ];
 
         foreach ($educationEntries as $educationEntry) {
@@ -225,6 +293,24 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'UX',
                 'display_order' => 2,
             ],
+            [
+                'title' => 'Responsive Case Study Layouts for Independent Builders',
+                'year' => 2025,
+                'journal_name' => 'Frontend Practice Quarterly',
+                'publisher' => 'Craft UI Press',
+                'article_url' => 'https://example.com',
+                'icon' => 'CS',
+                'display_order' => 3,
+            ],
+            [
+                'title' => 'Reducing Form Friction in Client Intake Systems',
+                'year' => 2024,
+                'journal_name' => 'Digital Service Review',
+                'publisher' => 'Service Design Forum',
+                'article_url' => 'https://example.com',
+                'icon' => 'DF',
+                'display_order' => 4,
+            ],
         ];
 
         foreach ($publications as $publication) {
@@ -252,6 +338,24 @@ class DatabaseSeeder extends Seeder
                 'avatar_url' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
                 'featured' => false,
                 'display_order' => 2,
+            ],
+            [
+                'name' => 'Priya Shah',
+                'title' => 'Product Director',
+                'company' => 'Pulse Collective',
+                'quote' => 'The launch kit gave us a polished public site and a backend our non technical team could manage with confidence.',
+                'avatar_url' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+                'featured' => false,
+                'display_order' => 3,
+            ],
+            [
+                'name' => 'Owen Brooks',
+                'title' => 'Clinic Manager',
+                'company' => 'Harbor Care',
+                'quote' => 'Our intake flow is clearer, faster, and much easier to maintain. The team adopted it without a long training period.',
+                'avatar_url' => 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+                'featured' => false,
+                'display_order' => 4,
             ],
         ];
 
@@ -285,19 +389,54 @@ class DatabaseSeeder extends Seeder
                 'published_at' => now()->subDays(4),
                 'display_order' => 2,
             ],
+            [
+                'title' => 'A better structure for project overview pages',
+                'slug' => 'better-project-overview-pages',
+                'excerpt' => 'How to keep case study pages readable on mobile while still showing enough detail for serious clients.',
+                'body' => "Project pages work best when they answer the important questions quickly. The title, role, result, and links should be easy to scan before the reader reaches the long description.\n\nOn small screens, generous side gutters and short content groups matter more than decorative layout tricks. The page should feel steady, readable, and direct.",
+                'cover_image_url' => 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+                'featured' => false,
+                'published' => true,
+                'published_at' => now()->subDays(2),
+                'display_order' => 3,
+            ],
+            [
+                'title' => 'What makes a testimonial carousel feel continuous',
+                'slug' => 'continuous-testimonial-carousel',
+                'excerpt' => 'A short note on duplicating content tracks, reset timing, and making carousel motion feel natural.',
+                'body' => "An infinite carousel should not feel like it is rewinding. The trick is to render a repeated track and reset the transform only when both positions look identical.\n\nThat keeps the movement calm and lets the content keep flowing in one direction without a visible snap.",
+                'cover_image_url' => 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&q=80',
+                'featured' => false,
+                'published' => true,
+                'published_at' => now()->subDay(),
+                'display_order' => 4,
+            ],
         ];
 
         foreach ($posts as $post) {
             BlogPost::updateOrCreate(['slug' => $post['slug']], $post);
         }
 
-        ContactMessage::firstOrCreate(
-            ['email' => 'client@example.com', 'subject' => 'New portfolio build'],
-            [
-                'name' => 'Sample Client',
-                'company' => 'Launch Co',
-                'message' => 'I would like to discuss a portfolio and dashboard build for a new personal brand.',
-            ],
-        );
+        $messages = [
+            ['name' => 'Sample Client', 'email' => 'client@example.com', 'company' => 'Launch Co', 'subject' => 'New portfolio build', 'message' => 'I would like to discuss a portfolio and dashboard build for a new personal brand.', 'read_at' => null],
+            ['name' => 'Nora Ellis', 'email' => 'nora@example.com', 'company' => 'Studio North', 'subject' => 'Case study CMS', 'message' => 'We need a lightweight CMS for publishing new work and collecting project inquiries.', 'read_at' => now()->subDays(2)],
+            ['name' => 'Marcus Lee', 'email' => 'marcus@example.com', 'company' => 'Metric Lane', 'subject' => 'Dashboard refresh', 'message' => 'Our internal dashboard needs better layout, filters, and mobile-friendly tables.', 'read_at' => null],
+            ['name' => 'Elena Cruz', 'email' => 'elena@example.com', 'company' => 'CarePath', 'subject' => 'Client portal planning', 'message' => 'Can you help scope a secure portal for intake forms and status updates?', 'read_at' => now()->subDay()],
+        ];
+
+        foreach ($messages as $message) {
+            ContactMessage::create($message);
+        }
+
+        $subscribers = [
+            ['name' => 'Avery Reader', 'email' => 'avery@example.com', 'source' => 'blog', 'subscribed_at' => now()->subDays(12)],
+            ['name' => 'Rina Patel', 'email' => 'rina@example.com', 'source' => 'portfolio', 'subscribed_at' => now()->subDays(8)],
+            ['name' => 'Leo Grant', 'email' => 'leo@example.com', 'source' => 'case-study', 'subscribed_at' => now()->subDays(5)],
+            ['name' => 'Mina Torres', 'email' => 'mina@example.com', 'source' => 'newsletter', 'subscribed_at' => now()->subDays(1)],
+        ];
+
+        foreach ($subscribers as $subscriber) {
+            NewsletterSubscription::create($subscriber);
+        }
     }
 }

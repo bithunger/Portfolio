@@ -5,6 +5,7 @@
     <div class="form-grid">
         <label>Name <input name="name" value="{{ old('name', $user->name) }}" required></label>
         <label>Email <input type="email" name="email" value="{{ old('email', $user->email) }}" required></label>
+        <label>Contact <input name="contact" value="{{ old('contact', $user->contact) }}"></label>
         <label>
             Password
             <input type="password" name="password" @required(! $user->exists)>
@@ -13,10 +14,14 @@
         @if ($user->exists)
             <small class="form-hint full">Leave password fields blank to keep the current password.</small>
         @endif
-        <label class="check-row full">
-            <input type="checkbox" name="email_verified" value="1" @checked(old('email_verified', (bool) $user->email_verified_at))>
-            Email verified
-        </label>
+        @if ($user->isOwner())
+            <small class="form-hint full">This owner account cannot be deleted from the backend.</small>
+        @else
+            <label class="check-row full">
+                <input type="checkbox" name="email_verified" value="1" @checked(old('email_verified', (bool) $user->email_verified_at))>
+                Email verified
+            </label>
+        @endif
     </div>
 
     <div class="form-actions">

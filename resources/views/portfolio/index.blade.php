@@ -175,9 +175,9 @@
                 @break
 
             @case('projects')
-                <section class="section project-section" id="work">
+                <section class="section project-section" id="projects">
                     <div class="section-heading">
-                        <p class="eyebrow">Selected Work</p>
+                        <p class="eyebrow">Selected Projects</p>
                         <h2>Recent launches and case studies</h2>
                     </div>
                     <div class="project-grid">
@@ -242,17 +242,25 @@
                         <div class="publication-list">
                             @foreach ($publications as $publication)
                                 <article class="publication-card">
-                                    <span class="publication-icon">{{ $publication->icon ?: 'RP' }}</span>
-                                    <div>
-                                        <p class="card-meta"><span>{{ $publication->year ?: 'Research' }}</span></p>
+                                    <div class="publication-card-head">
+                                        <div class="publication-meta">
+                                            <span class="publication-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M6 4h8l4 4v12H6V4zm8 0v4h4M9 12h6M9 16h6M9 8h2"></path>
+                                                </svg>
+                                            </span>
+                                            <p class="card-meta"><span>{{ $publication->year ?: 'Research' }}</span></p>
+                                        </div>
+                                        @if ($publication->article_url)
+                                            <a class="publication-link" href="{{ $publication->article_url }}" target="_blank" rel="noreferrer" aria-label="Read {{ $publication->title }}">
+                                                <svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 14L20 4M20 14v5H5V4h5"></path></svg>
+                                            </a>
+                                        @endif
+                                    </div>
+                                    <div class="publication-copy">
                                         <h3>{{ $publication->title }}</h3>
                                         <p>{{ $publication->journal_name ?: 'Journal' }} @if($publication->publisher) / {{ $publication->publisher }} @endif</p>
                                     </div>
-                                    @if ($publication->article_url)
-                                        <a href="{{ $publication->article_url }}" target="_blank" rel="noreferrer" aria-label="Read {{ $publication->title }}">
-                                            <svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 14L20 4M20 14v5H5V4h5"></path></svg>
-                                        </a>
-                                    @endif
                                 </article>
                             @endforeach
                         </div>
@@ -274,22 +282,24 @@
                             </div>
                         </div>
                         <div class="testimonial-carousel" data-testimonial-carousel>
-                            <div class="testimonial-track" data-testimonial-track>
-                                @foreach ($testimonials->concat($testimonials) as $testimonial)
-                                    <article class="testimonial-card">
-                                        <img
-                                            src="{{ $testimonial->avatar_url ?: asset('images/avatar-placeholder.svg') }}"
-                                            alt="{{ $testimonial->name }}"
-                                            @class(['avatar-fallback' => ! $testimonial->avatar_url])
-                                            onerror="this.onerror=null;this.src='{{ asset('images/avatar-placeholder.svg') }}';this.classList.add('avatar-fallback');"
-                                        >
-                                        <p>{{ $testimonial->quote }}</p>
-                                        <span>
-                                            <strong>{{ $testimonial->name }}</strong>
-                                            <small>{{ $testimonial->title }}{{ $testimonial->company ? ', '.$testimonial->company : '' }}</small>
-                                        </span>
-                                    </article>
-                                @endforeach
+                            <div class="testimonial-track" data-testimonial-track data-testimonial-sets="5">
+                                @for ($repeat = 0; $repeat < 5; $repeat++)
+                                    @foreach ($testimonials as $testimonial)
+                                        <article class="testimonial-card">
+                                            <img
+                                                src="{{ $testimonial->avatar_url ?: asset('images/avatar-placeholder.svg') }}"
+                                                alt="{{ $testimonial->name }}"
+                                                @class(['avatar-fallback' => ! $testimonial->avatar_url])
+                                                onerror="this.onerror=null;this.src='{{ asset('images/avatar-placeholder.svg') }}';this.classList.add('avatar-fallback');"
+                                            >
+                                            <p>{{ $testimonial->quote }}</p>
+                                            <span>
+                                                <strong>{{ $testimonial->name }}</strong>
+                                                <small>{{ $testimonial->title }}{{ $testimonial->company ? ', '.$testimonial->company : '' }}</small>
+                                            </span>
+                                        </article>
+                                    @endforeach
+                                @endfor
                             </div>
                         </div>
                     </section>
