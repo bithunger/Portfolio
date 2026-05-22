@@ -39,10 +39,12 @@ Route::middleware('guest')->prefix('admin')->name('admin.')->group(function (): 
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'email'])->name('password.email');
+    Route::get('/forgot-password/verify', [PasswordResetController::class, 'verifyForm'])->name('password.verify');
+    Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify'])->name('password.verify.store');
 });
 
 Route::middleware('guest')->group(function (): void {
-    Route::get('/admin/reset-password/{token}', [PasswordResetController::class, 'create'])->name('password.reset');
+    Route::get('/admin/reset-password', [PasswordResetController::class, 'create'])->name('password.reset');
     Route::post('/admin/reset-password', [PasswordResetController::class, 'store'])->name('password.update');
 });
 

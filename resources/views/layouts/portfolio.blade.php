@@ -49,7 +49,7 @@
     <link rel="preconnect" href="https://images.unsplash.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;750;850&family=Lora:wght@500;650;700&family=Manrope:wght@400;500;650;750;850&family=Playfair+Display:wght@650;750&family=Poppins:wght@400;500;650;750;850&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ $profile->favicon_url ?: asset('favicon.ico') }}">
-    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}?v={{ filemtime($_SERVER['DOCUMENT_ROOT'] . '/css/portfolio.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/portfolio.css') }}">
     @stack('styles')
     <style>
         :root {
@@ -92,7 +92,9 @@
             @endforeach
             <a href="{{ route('portfolio.blog.index') }}" @class(['active' => request()->routeIs('portfolio.blog.*')])>Blog</a>
             <a href="{{ route('contact.index') }}" @class(['active' => request()->routeIs('contact.index')])>Contact</a>
-            <a class="nav-pill" href="{{ route('admin.dashboard') }}" target="_blank" rel="noopener noreferrer">Control</a>
+            @auth
+                <a class="nav-pill" href="{{ route('admin.dashboard') }}" target="_blank" rel="noopener noreferrer">Control</a>
+            @endauth
         </nav>
     </header>
 
@@ -139,6 +141,6 @@
     </footer>
 
     @stack('scripts')
-    <script src="{{ asset('js/portfolio.js') }}?v={{ filemtime($_SERVER['DOCUMENT_ROOT'] . '/js/portfolio.js') }}" defer></script>
+    <script src="{{ \App\Support\VersionedAsset::url('js/portfolio.js') }}" defer></script>
 </body>
 </html>

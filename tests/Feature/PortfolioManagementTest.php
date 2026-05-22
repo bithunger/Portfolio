@@ -2,19 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Mail\PasswordResetOtpMail;
 use App\Models\BlogPost;
 use App\Models\ContactMessage;
 use App\Models\EducationEntry;
 use App\Models\NewsletterSubscription;
 use App\Models\Profile;
 use App\Models\Project;
-use App\Models\Service;
 use App\Models\Publication;
+use App\Models\Service;
 use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class PortfolioManagementTest extends TestCase
@@ -139,8 +141,10 @@ class PortfolioManagementTest extends TestCase
             ->assertSee('Portfolio control room');
     }
 
-    public function test_admin_can_open_reset_page_after_matching_email_and_change_password(): void
+    public function test_admin_can_verify_emailed_reset_code_and_change_password(): void
     {
+        Mail::fake();
+
         $user = User::create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
@@ -151,21 +155,33 @@ class PortfolioManagementTest extends TestCase
             'email' => 'admin@example.com',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('admin.password.verify'))
+            ->assertSessionHas('status');
 
-        $location = $response->headers->get('Location');
+        $code = null;
 
-        preg_match('#/admin/reset-password/([^?]+)#', $location, $matches);
-        $token = $matches[1] ?? null;
+        Mail::assertSent(PasswordResetOtpMail::class, function (PasswordResetOtpMail $mail) use (&$code): bool {
+            $code = $mail->code;
 
-        $this->assertNotNull($token);
+            return $mail->hasTo('admin@example.com')
+                && strlen($mail->code) === 4
+                && ctype_digit($mail->code);
+        });
+
         $this->assertDatabaseHas('password_reset_tokens', [
             'email' => 'admin@example.com',
         ]);
 
+        $this->post(route('admin.password.verify.store'), [
+            'code' => $code,
+        ])->assertRedirect(route('password.reset'))
+            ->assertSessionHas('status');
+
+        $this->get(route('password.reset'))
+            ->assertOk()
+            ->assertSee('Choose a new password');
+
         $this->post(route('password.update'), [
-            'token' => $token,
-            'email' => 'admin@example.com',
             'password' => 'changed-password',
             'password_confirmation' => 'changed-password',
         ])->assertRedirect(route('admin.login'))
@@ -174,6 +190,9 @@ class PortfolioManagementTest extends TestCase
         $user->refresh();
 
         $this->assertTrue(Hash::check('changed-password', $user->password));
+        $this->assertDatabaseMissing('password_reset_tokens', [
+            'email' => 'admin@example.com',
+        ]);
     }
 
     public function test_admin_can_manage_newsletter_subscribers(): void

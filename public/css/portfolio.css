@@ -787,6 +787,13 @@ main {
     font-weight: 850;
 }
 
+.inline-link-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
 .blog-list-hero {
     position: relative;
     overflow: hidden;

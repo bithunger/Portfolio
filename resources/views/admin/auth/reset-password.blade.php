@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reset Password / {{ $siteProfile->owner_name }} Portfolio</title>
     <link rel="icon" href="{{ $siteProfile->favicon_url ?: asset('favicon.ico') }}">
-    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}?v={{ filemtime($_SERVER['DOCUMENT_ROOT'] . '/css/portfolio.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/portfolio.css') }}">
     <style>
         :root {
             --accent: {{ $siteProfile->accent_color ?: '#0f766e' }};
@@ -22,15 +22,16 @@
         <section>
             <p class="eyebrow">{{ $siteProfile->owner_name }} Portfolio</p>
             <h1>Choose a new password</h1>
-            <p>Set a new password for the matched admin account.</p>
+            <p>Set a new password for {{ $maskedEmail }}. This page is available only after code verification.</p>
         </section>
         <form class="login-card" method="post" action="{{ route('password.update') }}">
             @csrf
+            @if (session('status'))
+                <div class="notice success">{{ session('status') }}</div>
+            @endif
             @if ($errors->any())
                 <div class="notice error">{{ $errors->first() }}</div>
             @endif
-            <input type="hidden" name="token" value="{{ $token }}">
-            <input type="hidden" name="email" value="{{ old('email', $email) }}">
             <label>New password <input type="password" name="password" required></label>
             <label>Password confirmation <input type="password" name="password_confirmation" required></label>
             <button class="btn primary" type="submit">Reset password</button>

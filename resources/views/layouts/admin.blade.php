@@ -20,7 +20,7 @@
             } catch (error) {}
         })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/portfolio.css') }}?v={{ filemtime($_SERVER['DOCUMENT_ROOT'] . '/css/portfolio.css') }}">
+    <link rel="stylesheet" href="{{ \App\Support\VersionedAsset::url('css/portfolio.css') }}">
     <style>
         :root {
             --accent: {{ $siteProfile->accent_color ?: '#0f766e' }};
@@ -110,6 +110,6 @@
     @endif
 
     @stack('scripts')
-    <script src="{{ asset('js/portfolio.js') }}?v={{ filemtime($_SERVER['DOCUMENT_ROOT'] . '/js/portfolio.js') }}" defer></script>
+    <script src="{{ \App\Support\VersionedAsset::url('js/portfolio.js') }}" defer></script>
 </body>
 </html>
