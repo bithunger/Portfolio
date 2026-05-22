@@ -25,8 +25,11 @@ Route::get('/projects/{project:slug}', [PortfolioController::class, 'show'])->na
 Route::get('/blog', [PortfolioController::class, 'blogIndex'])->name('portfolio.blog.index');
 Route::get('/blog/{blogPost:slug}', [PortfolioController::class, 'showBlog'])->name('portfolio.blog.show');
 Route::get('/contact', [ContactController::class, 'create'])->name('contact.index');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
-Route::post('/newsletter', [NewsletterController::class, 'store'])->name('newsletter.store');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:6,1')->name('contact.store');
+Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware('throttle:6,1')->name('newsletter.store');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])
+    ->whereAlphaNumeric('token')
+    ->name('newsletter.unsubscribe');
 
 Route::get('/login', function () {
     return redirect()->route('admin.login');

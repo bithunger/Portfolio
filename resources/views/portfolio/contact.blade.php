@@ -34,10 +34,12 @@
                 @endif
             </div>
         </div>
-        <form class="contact-form" action="{{ route('contact.store') }}" method="post">
+        <form id="contact-form" class="contact-form" action="{{ route('contact.store') }}" method="post" data-async-form>
             @csrf
             @if (session('status'))
-                <div class="notice success">{{ session('status') }}</div>
+                <div class="notice success" data-form-status>{{ session('status') }}</div>
+            @else
+                <div class="notice success" data-form-status hidden></div>
             @endif
             <label>Name <input type="text" name="name" value="{{ old('name') }}" placeholder="Your name" required></label>
             <label>Email <input type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" required></label>
@@ -45,7 +47,9 @@
             <label>Subject <input type="text" name="subject" value="{{ old('subject') }}" placeholder="Project type or topic"></label>
             <label class="full">Message <textarea name="message" rows="5" placeholder="Tell me about the goal, timeline, budget range, and useful links." required>{{ old('message') }}</textarea></label>
             @if ($errors->any())
-                <div class="notice error">{{ $errors->first() }}</div>
+                <div class="notice error" data-form-error>{{ $errors->first() }}</div>
+            @else
+                <div class="notice error" data-form-error hidden></div>
             @endif
             <button class="btn primary" type="submit">Send message</button>
         </form>

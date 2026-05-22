@@ -142,6 +142,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     });
 
+    document.querySelectorAll('[data-async-form]').forEach((form) => {
+        const statusNotice = form.querySelector('[data-form-status]');
+        const errorNotice = form.querySelector('[data-form-error]');
+        const submitButton = form.querySelector('[type="submit"]');
+
+        const showNotice = (notice, message) => {
+            if (!notice) {
+                return;
+            }
+
+            notice.textContent = message;
+            notice.hidden = false;
+            notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
+        const hideNotice = (notice) => {
+            if (!notice) {
+                return;
+            }
+
+            notice.hidden = true;
+            notice.textContent = '';
+        };
+
+        const firstError = (payload) => {
+            if (payload?.errors) {
+                const messages = Object.values(payload.errors).flat();
+
+                if (messages.length) {
+                    return messages[0];
+                }
+            }
+
+            return payload?.message || 'Please check the form and try again.';
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            hideNotice(statusNotice);
+            hideNotice(errorNotice);
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.dataset.originalText = submitButton.dataset.originalText || submitButton.textContent;
+                submitButton.textContent = 'Sending...';
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method || 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                const payload = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(firstError(payload));
+                }
+
+                showNotice(statusNotice, payload.message || 'Submitted successfully.');
+                form.reset();
+            } catch (error) {
+                showNotice(errorNotice, error.message || 'Something went wrong. Please try again.');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = submitButton.dataset.originalText || 'Submit';
+                }
+            }
+        });
+    });
+
     const articleContent = document.querySelector('.article-content');
 
     if (articleContent) {
@@ -194,7 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const tinyEditors = document.querySelectorAll('[data-tinymce-editor]');
 
-    if (tinyEditors.length && window.tinymce) {
+    if (tinyEditors.length) {
+        const tinyMceSource = 'https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js';
         const getSelectedImage = (editor) => {
             const node = editor.selection.getNode();
 
@@ -243,64 +319,106 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         };
 
-        window.tinymce.init({
-            selector: '[data-tinymce-editor]',
-            height: 560,
-            branding: false,
-            promotion: false,
-            menubar: 'edit insert view format table tools',
-            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table codesample help wordcount autoresize',
-            toolbar: [
-                'undo redo | blocks | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify',
-                'bullist numlist outdent indent | link image media table codesample blockquote | imagecrop | removeformat code fullscreen',
-            ].join(' | '),
-            block_formats: 'Paragraph=p; Heading 2=h2; Heading 3=h3; Heading 4=h4; Quote=blockquote; Code=pre',
-            contextmenu: 'link image table',
-            object_resizing: 'img,table',
-            image_title: true,
-            image_caption: true,
-            image_advtab: true,
-            image_dimensions: true,
-            paste_data_images: false,
-            relative_urls: false,
-            remove_script_host: false,
-            convert_urls: false,
-            valid_elements: '*[*]',
-            extended_valid_elements: 'figure[class|style],figcaption[class|style],img[src|alt|title|width|height|style|class|loading],pre[class|style],code[class|style]',
-            content_style: [
-                'body { font-family: Inter, Arial, sans-serif; color: #303832; line-height: 1.65; }',
-                'img { max-width: 100%; height: auto; border-radius: 8px; }',
-                'figure { margin: 18px 0; }',
-                'figcaption { margin-top: 6px; color: #66716c; font-size: 0.9rem; }',
-                'pre { overflow-x: auto; padding: 14px; border-radius: 8px; color: #dbeafe; background: #121614; }',
-                'code { font-family: Consolas, Monaco, monospace; }',
-                'blockquote { border-left: 4px solid #0f766e; margin: 18px 0; padding: 12px 16px; background: #eef7f4; }',
-            ].join(' '),
-            setup: (editor) => {
-                editor.ui.registry.addMenuButton('imagecrop', {
-                    text: 'Crop',
-                    fetch: (callback) => {
-                        callback([
-                            { type: 'menuitem', text: 'Natural image', onAction: () => applyImageCrop(editor, '') },
-                            { type: 'menuitem', text: 'Wide 16:9', onAction: () => applyImageCrop(editor, '16 / 9') },
-                            { type: 'menuitem', text: 'Classic 4:3', onAction: () => applyImageCrop(editor, '4 / 3') },
-                            { type: 'menuitem', text: 'Square 1:1', onAction: () => applyImageCrop(editor, '1 / 1') },
-                            { type: 'menuitem', text: 'Portrait 3:4', onAction: () => applyImageCrop(editor, '3 / 4') },
-                        ]);
-                    },
-                });
+        const initializeTinyEditors = () => {
+            if (!window.tinymce || initializeTinyEditors.done) {
+                return Boolean(initializeTinyEditors.done);
+            }
 
-                editor.on('change keyup undo redo', () => {
-                    editor.save();
-                });
-            },
-        });
+            initializeTinyEditors.done = true;
 
-        document.querySelectorAll('form').forEach((form) => {
-            form.addEventListener('submit', () => {
-                window.tinymce.triggerSave();
+            window.tinymce.init({
+                selector: '[data-tinymce-editor]',
+                base_url: 'https://cdn.jsdelivr.net/npm/tinymce@7',
+                suffix: '.min',
+                license_key: 'gpl',
+                height: 560,
+                branding: false,
+                promotion: false,
+                menubar: 'edit insert view format table tools',
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table codesample help wordcount autoresize',
+                toolbar: [
+                    'undo redo | blocks | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify',
+                    'bullist numlist outdent indent | link image media table codesample blockquote | imagecrop | removeformat code fullscreen',
+                ].join(' | '),
+                block_formats: 'Paragraph=p; Heading 2=h2; Heading 3=h3; Heading 4=h4; Quote=blockquote; Code=pre',
+                contextmenu: 'link image table',
+                object_resizing: 'img,table',
+                image_title: true,
+                image_caption: true,
+                image_advtab: true,
+                image_dimensions: true,
+                paste_data_images: false,
+                relative_urls: false,
+                remove_script_host: false,
+                convert_urls: false,
+                valid_elements: '*[*]',
+                extended_valid_elements: 'figure[class|style],figcaption[class|style],img[src|alt|title|width|height|style|class|loading],pre[class|style],code[class|style]',
+                content_style: [
+                    'body { font-family: Inter, Arial, sans-serif; color: #303832; line-height: 1.65; }',
+                    'img { max-width: 100%; height: auto; border-radius: 8px; }',
+                    'figure { margin: 18px 0; }',
+                    'figcaption { margin-top: 6px; color: #66716c; font-size: 0.9rem; }',
+                    'pre { overflow-x: auto; padding: 14px; border-radius: 8px; color: #dbeafe; background: #121614; }',
+                    'code { font-family: Consolas, Monaco, monospace; }',
+                    'blockquote { border-left: 4px solid #0f766e; margin: 18px 0; padding: 12px 16px; background: #eef7f4; }',
+                ].join(' '),
+                setup: (editor) => {
+                    editor.ui.registry.addMenuButton('imagecrop', {
+                        text: 'Crop',
+                        fetch: (callback) => {
+                            callback([
+                                { type: 'menuitem', text: 'Natural image', onAction: () => applyImageCrop(editor, '') },
+                                { type: 'menuitem', text: 'Wide 16:9', onAction: () => applyImageCrop(editor, '16 / 9') },
+                                { type: 'menuitem', text: 'Classic 4:3', onAction: () => applyImageCrop(editor, '4 / 3') },
+                                { type: 'menuitem', text: 'Square 1:1', onAction: () => applyImageCrop(editor, '1 / 1') },
+                                { type: 'menuitem', text: 'Portrait 3:4', onAction: () => applyImageCrop(editor, '3 / 4') },
+                            ]);
+                        },
+                    });
+
+                    editor.on('change keyup undo redo', () => {
+                        editor.save();
+                    });
+                },
             });
-        });
+
+            document.querySelectorAll('form').forEach((form) => {
+                if (form.dataset.tinymceSaveBound) {
+                    return;
+                }
+
+                form.dataset.tinymceSaveBound = 'true';
+                form.addEventListener('submit', () => {
+                    window.tinymce?.triggerSave();
+                });
+            });
+
+            return true;
+        };
+
+        const waitForTinyMce = (attempt = 0) => {
+            if (initializeTinyEditors()) {
+                return;
+            }
+
+            if (attempt < 30) {
+                window.setTimeout(() => waitForTinyMce(attempt + 1), 150);
+            }
+        };
+
+        const existingTinyScript = document.querySelector('script[src*="tinymce"]');
+
+        if (existingTinyScript) {
+            existingTinyScript.addEventListener('load', initializeTinyEditors, { once: true });
+        } else {
+            const script = document.createElement('script');
+            script.src = tinyMceSource;
+            script.referrerPolicy = 'origin';
+            script.addEventListener('load', initializeTinyEditors, { once: true });
+            document.head.appendChild(script);
+        }
+
+        waitForTinyMce();
     }
 
     document.querySelectorAll('[data-cover-input]').forEach((input) => {

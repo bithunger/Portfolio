@@ -12,14 +12,18 @@
             <p>Short, practical notes on portfolio strategy, backend UX, and Laravel polish.</p>
         </div>
     </div>
-    <form class="newsletter-form" action="{{ route('newsletter.store') }}" method="post">
+    <form id="newsletter-form" class="newsletter-form" action="{{ route('newsletter.store') }}" method="post" data-async-form>
         @csrf
         <input type="hidden" name="source" value="blog">
         @if (session('newsletter_status'))
-            <div class="notice success">{{ session('newsletter_status') }}</div>
+            <div class="notice success" data-form-status>{{ session('newsletter_status') }}</div>
+        @else
+            <div class="notice success" data-form-status hidden></div>
         @endif
         @if ($errors->any())
-            <div class="notice error">{{ $errors->first() }}</div>
+            <div class="notice error" data-form-error>{{ $errors->first() }}</div>
+        @else
+            <div class="notice error" data-form-error hidden></div>
         @endif
         <label>Name <input type="text" name="name" value="{{ old('name') }}" placeholder="Your name"></label>
         <label>Email <input type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" required></label>

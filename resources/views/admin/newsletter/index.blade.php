@@ -17,6 +17,7 @@
                     <th>Subscriber</th>
                     <th>Source</th>
                     <th>Subscribed</th>
+                    <th>Status</th>
                     <th></th>
                 </tr>
             </thead>
@@ -29,6 +30,11 @@
                         </td>
                         <td>{{ $subscription->source ?: 'blog' }}</td>
                         <td>{{ optional($subscription->subscribed_at)->format('M j, Y g:i A') ?: 'Unknown' }}</td>
+                        <td>
+                            <span class="chip {{ $subscription->isSubscribed() ? 'accent' : '' }}">
+                                {{ $subscription->isSubscribed() ? 'Active' : 'Unsubscribed' }}
+                            </span>
+                        </td>
                         <td class="actions">
                             <form method="post" action="{{ route('admin.newsletter.destroy', $subscription) }}" data-confirm="Remove this subscriber?">
                                 @csrf
@@ -38,7 +44,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4">No newsletter subscribers yet.</td></tr>
+                    <tr><td colspan="5">No newsletter subscribers yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -34,7 +34,7 @@
             @endif
             <label>Email <input type="email" name="email" value="{{ old('email') }}" placeholder="admin@example.com" required autofocus></label>
             <button class="btn primary" type="submit">Send reset code</button>
-            <a class="back-link" href="{{ route('admin.login') }}">Back to sign in</a>
+            <a class="text-link" href="{{ route('admin.login') }}">Back to sign in</a>
         </form>
     </main>
 </body>

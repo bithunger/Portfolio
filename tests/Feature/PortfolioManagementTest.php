@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Mail\BlogPostPublishedMail;
+use App\Mail\ContactMessageConfirmationMail;
+use App\Mail\ContactMessageReceivedMail;
+use App\Mail\NewsletterSubscribedMail;
 use App\Mail\PasswordResetOtpMail;
 use App\Models\BlogPost;
 use App\Models\ContactMessage;
@@ -33,6 +37,10 @@ class PortfolioManagementTest extends TestCase
 
     public function test_contact_form_stores_a_message(): void
     {
+        Mail::fake();
+
+        Profile::site()->update(['email' => 'owner@example.com']);
+
         $this->get('/contact')
             ->assertOk()
             ->assertSee('Tell me what you are building');
@@ -44,10 +52,48 @@ class PortfolioManagementTest extends TestCase
             'message' => 'Can we talk about a portfolio build?',
         ])->assertSessionHas('status');
 
+        $message = ContactMessage::where('email', 'taylor@example.com')->firstOrFail();
+
         $this->assertDatabaseHas(ContactMessage::class, [
             'email' => 'taylor@example.com',
             'subject' => 'Portfolio project',
         ]);
+
+        Mail::assertSent(ContactMessageReceivedMail::class, function (ContactMessageReceivedMail $mail) use ($message): bool {
+            return $mail->hasTo('owner@example.com')
+                && $mail->message->is($message);
+        });
+
+        Mail::assertSent(ContactMessageConfirmationMail::class, function (ContactMessageConfirmationMail $mail) use ($message): bool {
+            return $mail->hasTo('taylor@example.com')
+                && $mail->message->is($message);
+        });
+    }
+
+    public function test_public_forms_support_json_submission_for_inline_feedback(): void
+    {
+        Mail::fake();
+
+        Profile::site()->update(['email' => 'owner@example.com']);
+
+        $this->postJson(route('contact.store'), [
+            'name' => 'Ajax Client',
+            'email' => 'ajax.client@example.com',
+            'subject' => 'Inline contact',
+            'message' => 'Can we discuss the project without a full page jump?',
+        ])->assertOk()
+            ->assertJson([
+                'message' => 'Message received. Thanks for reaching out. I will contact you soon.',
+            ]);
+
+        $this->postJson(route('newsletter.store'), [
+            'name' => 'Ajax Reader',
+            'email' => 'ajax.reader@example.com',
+            'source' => 'blog',
+        ])->assertOk()
+            ->assertJson([
+                'message' => 'You are on the list. A welcome email with an unsubscribe link is on its way.',
+            ]);
     }
 
     public function test_homepage_renders_education_and_publications(): void
@@ -381,6 +427,68 @@ class PortfolioManagementTest extends TestCase
             ->assertSee('A useful dashboard gets the everyday workflows out of the way.');
     }
 
+    public function test_published_blog_post_emails_active_newsletter_subscribers_once(): void
+    {
+        Mail::fake();
+
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+        ]);
+
+        $activeSubscriber = NewsletterSubscription::create([
+            'name' => 'Active Reader',
+            'email' => 'active@example.com',
+            'source' => 'blog',
+            'unsubscribe_token' => NewsletterSubscription::makeUnsubscribeToken(),
+            'subscribed_at' => now(),
+        ]);
+
+        $unsubscribedReader = NewsletterSubscription::create([
+            'name' => 'Former Reader',
+            'email' => 'former@example.com',
+            'source' => 'blog',
+            'unsubscribe_token' => NewsletterSubscription::makeUnsubscribeToken(),
+            'subscribed_at' => now(),
+            'unsubscribed_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.blog.store'), [
+                'title' => 'A practical launch checklist',
+                'excerpt' => 'A concise checklist for shipping a cleaner portfolio update.',
+                'body' => '<p>Launch with care.</p>',
+                'published' => '1',
+                'published_at' => now()->format('Y-m-d H:i:s'),
+                'display_order' => 1,
+            ])->assertRedirect(route('admin.blog.index'));
+
+        $post = BlogPost::where('slug', 'a-practical-launch-checklist')->firstOrFail();
+
+        Mail::assertSent(BlogPostPublishedMail::class, function (BlogPostPublishedMail $mail) use ($post, $activeSubscriber): bool {
+            return $mail->hasTo('active@example.com')
+                && $mail->post->is($post)
+                && str_contains($mail->unsubscribeUrl, $activeSubscriber->unsubscribe_token);
+        });
+        Mail::assertNotSent(BlogPostPublishedMail::class, fn (BlogPostPublishedMail $mail): bool => $mail->hasTo($unsubscribedReader->email));
+
+        $this->assertNotNull($post->fresh()->newsletter_sent_at);
+
+        $this->actingAs($admin)
+            ->put(route('admin.blog.update', $post), [
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+                'body' => $post->body,
+                'published' => '1',
+                'published_at' => $post->published_at?->format('Y-m-d H:i:s'),
+                'display_order' => $post->display_order,
+            ])->assertRedirect(route('admin.blog.index'));
+
+        Mail::assertSent(BlogPostPublishedMail::class, 1);
+    }
+
     public function test_admin_can_create_blog_post_with_uploaded_cover_and_rich_body(): void
     {
         $user = User::create([
@@ -521,15 +629,40 @@ class PortfolioManagementTest extends TestCase
 
     public function test_newsletter_form_stores_subscription(): void
     {
+        Mail::fake();
+
+        Profile::site()->update(['email' => 'owner@example.com']);
+
         $this->post('/newsletter', [
             'name' => 'Reader',
             'email' => 'reader@example.com',
             'source' => 'blog',
         ])->assertSessionHas('newsletter_status');
 
+        $subscription = NewsletterSubscription::where('email', 'reader@example.com')->firstOrFail();
+
         $this->assertDatabaseHas(NewsletterSubscription::class, [
             'email' => 'reader@example.com',
             'source' => 'blog',
         ]);
+
+        $this->assertNotNull($subscription->unsubscribe_token);
+        $this->assertNull($subscription->unsubscribed_at);
+
+        Mail::assertSent(NewsletterSubscribedMail::class, function (NewsletterSubscribedMail $mail) use ($subscription): bool {
+            return $mail->hasTo('reader@example.com')
+                && $mail->subscription->is($subscription)
+                && str_contains($mail->unsubscribeUrl, $subscription->unsubscribe_token);
+        });
+
+        Mail::assertNotSent(NewsletterSubscribedMail::class, fn (NewsletterSubscribedMail $mail): bool => $mail->hasTo('owner@example.com'));
+
+        $this->get(route('newsletter.unsubscribe', $subscription->unsubscribe_token))
+            ->assertOk()
+            ->assertSee('You are unsubscribed');
+
+        $subscription->refresh();
+
+        $this->assertNotNull($subscription->unsubscribed_at);
     }
 }

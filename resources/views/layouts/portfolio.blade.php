@@ -92,9 +92,6 @@
             @endforeach
             <a href="{{ route('portfolio.blog.index') }}" @class(['active' => request()->routeIs('portfolio.blog.*')])>Blog</a>
             <a href="{{ route('contact.index') }}" @class(['active' => request()->routeIs('contact.index')])>Contact</a>
-            @auth
-                <a class="nav-pill" href="{{ route('admin.dashboard') }}" target="_blank" rel="noopener noreferrer">Control</a>
-            @endauth
         </nav>
     </header>
 
@@ -117,7 +114,12 @@
             @endif
             <strong>{{ $profile->owner_name }}</strong>
             <a class="footer-email" href="mailto:{{ $profile->email }}">{{ $profile->email }}</a>
-            <p class="footer-copy">&copy; {{ now()->year }} {{ $profile->owner_name }}. All rights reserved.</p>
+            <p class="footer-copy">
+                &copy; {{ now()->year }} {{ $profile->owner_name }}. All rights reserved.
+                @auth
+                    <a class="footer-control-link" href="{{ route('admin.dashboard') }}" target="_blank" rel="noopener noreferrer">Control</a>
+                @endauth
+            </p>
         </div>
         <div class="footer-links" aria-label="Social links">
             @foreach ([

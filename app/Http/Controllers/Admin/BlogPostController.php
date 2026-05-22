@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
+use App\Services\BlogNewsletterNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,6 +12,11 @@ use Illuminate\View\View;
 
 class BlogPostController extends Controller
 {
+    public function __construct(private readonly BlogNewsletterNotifier $blogNewsletterNotifier)
+    {
+        //
+    }
+
     public function index(): View
     {
         return view('admin.blog.index', [
@@ -34,7 +40,8 @@ class BlogPostController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        BlogPost::create($this->validated($request));
+        $post = BlogPost::create($this->validated($request));
+        $this->blogNewsletterNotifier->sendIfNeeded($post);
 
         return redirect()->route('admin.blog.index')->with('status', 'Blog post created.');
     }
@@ -49,6 +56,7 @@ class BlogPostController extends Controller
     public function update(Request $request, BlogPost $blogPost): RedirectResponse
     {
         $blogPost->update($this->validated($request, $blogPost));
+        $this->blogNewsletterNotifier->sendIfNeeded($blogPost);
 
         return redirect()->route('admin.blog.index')->with('status', 'Blog post updated.');
     }

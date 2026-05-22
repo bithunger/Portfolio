@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
     'featured',
     'published',
     'published_at',
+    'newsletter_sent_at',
     'display_order',
 ])]
 class BlogPost extends Model
@@ -24,6 +25,7 @@ class BlogPost extends Model
             'featured' => 'boolean',
             'published' => 'boolean',
             'published_at' => 'datetime',
+            'newsletter_sent_at' => 'datetime',
             'display_order' => 'integer',
         ];
     }
@@ -36,5 +38,11 @@ class BlogPost extends Model
                 $query->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());
             });
+    }
+
+    public function isVisibleOnPortfolio(): bool
+    {
+        return $this->published
+            && (! $this->published_at || $this->published_at->lte(now()));
     }
 }
