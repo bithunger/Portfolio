@@ -1543,11 +1543,11 @@ select {
 
 .footer-control-link {
     /* width: max-content; */
-    color: var(--muted);
+    /* color: var(--muted); */
     /* font-size: .9rem; */
     /* font-weight: 800; */
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 2px;
 }
 
 .footer-control-link:hover {
